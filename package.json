@@ -1,0 +1,25 @@
+{
+  "name": "mychatbot",
+  "version": "1.0.0",
+  "description": "chatbot practico AOS",
+  "main": "app.js",
+  "scripts": {
+    "dev": "Dev=true nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "jerson lopez",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "cors": "^2.8.4",
+    "dotenv": "^6.0.0",
+    "express": "^4.16.3",
+    "mongoose": "^5.1.6",
+    "nodemon": "^1.17.5",
+    "watson-developer-cloud": "^3.5.0"
+  },
+  "devDependencies": {
+    "morgan": "^1.9.0"
+  }
+}
