@@ -214,9 +214,9 @@ let w_conversation = new watson.AssistantV1({
 
 module.exports.eventReceiver = (req, res) => {
 
-    var text = null;
+    let text = null;
 
-    messaging_events = req.body.entry[0].messaging;
+    let messaging_events = req.body.entry[0].messaging;
     for (i = 0; i < messaging_events.length; i++) {
         event = req.body.entry[0].messaging[i];
         sender = event.sender.id;
@@ -278,7 +278,7 @@ function callWatson(payload, sender) {
 
 function sendMessage(sender, text_) {
     text_ = text_.substring(0, 319);
-    messageData = {
+    let messageData = {
         text: text_
     };
 
