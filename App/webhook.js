@@ -5,7 +5,9 @@ const request = require('request')
 
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN
 
-let { watsonAssistantMessenger } = require('./watson')
+let {
+    watsonAssistantMessenger
+} = require('./watson')
 
 let conversation_id = "";
 
@@ -130,13 +132,13 @@ module.exports.eventReceiver = (req, res) => {
 
             if (webhook_event.message && webhook_event.message.text) {
                 text = webhook_event.message.text;
-            }else if (webhook_event.postback && !text) {
+            } else if (webhook_event.postback && !text) {
                 text = webhook_event.postback.payload;
-            }else{
+            } else {
                 res.sendStatus(404);
             }
-            
-            var params = {
+
+            /* var params = {
                 input: text,
                 context: {"conversation_id": conversation_id}
             }
@@ -154,7 +156,31 @@ module.exports.eventReceiver = (req, res) => {
                     payload.context = params.context;
                 }
             }
-            watsonAssistantMessenger(payload, sender_psid);
+            watsonAssistantMessenger(payload, sender_psid); */
+
+
+            var params = {
+                input: text,
+                context: {"conversation_id": conversation_id}
+                //context: contexid
+            }
+
+            var payload = {
+                workspace_id: workspace
+            };
+
+            if (params) {
+                if (params.input) {
+                    params.input = params.input.replace("\n", "");
+                    payload.input = {
+                        "text": params.input
+                    };
+                }
+                if (params.context) {
+                    payload.context = params.context;
+                }
+            }
+            callWatson(payload, sender);
         });
 
         // Returns a '200 OK' response to all requests
@@ -193,3 +219,66 @@ module.exports.tokenVerify = (req, res) => {
 
 
 /*************************************** Conexion con watson *****************************************/
+
+const watson = require('watson-developer-cloud'); // watson sdk
+
+
+const workspace = process.env.WORKSPACE_ID  || 'workspaceId';
+
+let assistant = new watson.AssistantV1({
+    // If unspecified here, the ASSISTANT_USERNAME and ASSISTANT_PASSWORD env properties will be checked
+    // After that, the SDK will fall back to the bluemix-provided VCAP_SERVICES environment property
+    url: 'https://gateway.watsonplatform.net/conversation/api',
+    username: process.env.ASSISTANT_USERNAME || '<username>',
+    password: process.env.ASSISTANT_PASSWORD || '<password>',
+    version: '2018-02-16'
+});
+
+
+function callWatson(payload, sender) {
+    w_conversation.message(payload, function (err, convResults) {
+        console.log(convResults);
+        contexid = convResults.context;
+
+        if (err) {
+            return responseToRequest.send("Erro.");
+        }
+
+        if (convResults.context != null)
+            conversation_id = convResults.context.conversation_id;
+        if (convResults != null && convResults.output != null) {
+            var i = 0;
+            while (i < convResults.output.text.length) {
+                sendMessage(sender, convResults.output.text[i++]);
+            }
+        }
+
+    });
+}
+
+function sendMessage(sender, text_) {
+    text_ = text_.substring(0, 319);
+    messageData = {
+        text: text_
+    };
+
+    request({
+        url: 'https://graph.facebook.com/v2.6/me/messages',
+        qs: {
+            access_token: token
+        },
+        method: 'POST',
+        json: {
+            recipient: {
+                id: sender
+            },
+            message: messageData,
+        }
+    }, function (error, response, body) {
+        if (error) {
+            console.log('Error sending message: ', error);
+        } else if (response.body.error) {
+            console.log('Error: ', response.body.error);
+        }
+    });
+};
