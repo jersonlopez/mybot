@@ -124,19 +124,19 @@ module.exports.eventReceiver = (req, res) => {
 
             // Check if the event is a message or postback and
             // pass the event to the appropriate handler function
-            /* if (webhook_event.message) {
+            if (webhook_event.message) {
                 handleMessage(sender_psid, webhook_event.message);
             } else if (webhook_event.postback) {
                 handlePostback(sender_psid, webhook_event.postback);
-            } */
+            }
 
-            if (webhook_event.message && webhook_event.message.text) {
+            /* if (webhook_event.message && webhook_event.message.text) {
                 text = webhook_event.message.text;
             } else if (webhook_event.postback && !text) {
                 text = webhook_event.postback.payload;
             } else {
                 res.sendStatus(404);
-            }
+            } */
 
             /* var params = {
                 input: text,
@@ -157,30 +157,6 @@ module.exports.eventReceiver = (req, res) => {
                 }
             }
             watsonAssistantMessenger(payload, sender_psid); */
-
-
-            var params = {
-                input: text,
-                context: {"conversation_id": conversation_id}
-                //context: contexid
-            }
-
-            var payload = {
-                workspace_id: workspace
-            };
-
-            if (params) {
-                if (params.input) {
-                    params.input = params.input.replace("\n", "");
-                    payload.input = {
-                        "text": params.input
-                    };
-                }
-                if (params.context) {
-                    payload.context = params.context;
-                }
-            }
-            callWatson(payload, sender_psid);
         });
 
         // Returns a '200 OK' response to all requests

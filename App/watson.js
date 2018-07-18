@@ -95,9 +95,6 @@ async function updateMessage(input, response) {
   if (!response.output) {
     response.output = {};
   } else {
-    if (response.context.cumpleanos != null) {
-      console.log("entre al if")
-    }
     if (response.context.saludo) {
       response.context.saludo = false
       response.output.text = await greet(response)
