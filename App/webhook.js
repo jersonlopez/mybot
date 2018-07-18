@@ -9,9 +9,10 @@ let {
     watsonAssistantMessenger
 } = require('./watson')
 
-let conversation_id = "";
+let conversation_id, contexid = "";
 
-let handlePostback = (sender_psid, received_postback) => {
+
+/* let handlePostback = (sender_psid, received_postback) => {
     let response;
 
     // Get the payload for the postback
@@ -138,7 +139,7 @@ module.exports.eventReceiver = (req, res) => {
                 res.sendStatus(404);
             } */
 
-            /* var params = {
+/* var params = {
                 input: text,
                 context: {"conversation_id": conversation_id}
             }
@@ -156,7 +157,7 @@ module.exports.eventReceiver = (req, res) => {
                     payload.context = params.context;
                 }
             }
-            watsonAssistantMessenger(payload, sender_psid); */
+            watsonAssistantMessenger(payload, sender_psid); 
         });
 
         // Returns a '200 OK' response to all requests
@@ -165,7 +166,7 @@ module.exports.eventReceiver = (req, res) => {
         // Returns a '404 Not Found' if event is not from a page subscription
         res.sendStatus(404);
     }
-}
+} */
 
 module.exports.tokenVerify = (req, res) => {
     // Your verify token. Should be a random string.
@@ -199,7 +200,7 @@ module.exports.tokenVerify = (req, res) => {
 const watson = require('watson-developer-cloud'); // watson sdk
 
 
-const workspace = process.env.WORKSPACE_ID  || 'workspaceId';
+const workspace = process.env.WORKSPACE_ID || 'workspaceId';
 
 let w_conversation = new watson.AssistantV1({
     // If unspecified here, the ASSISTANT_USERNAME and ASSISTANT_PASSWORD env properties will be checked
@@ -211,9 +212,53 @@ let w_conversation = new watson.AssistantV1({
 });
 
 
+module.exports.eventReceiver = (req, res) => {
+
+    var text = null;
+
+    messaging_events = req.body.entry[0].messaging;
+    for (i = 0; i < messaging_events.length; i++) {
+        event = req.body.entry[0].messaging[i];
+        sender = event.sender.id;
+
+        if (event.message && event.message.text) {
+            text = event.message.text;
+        } else if (event.postback && !text) {
+            text = event.postback.payload;
+        } else {
+            break;
+        }
+
+        var params = {
+            input: text,
+            // context: {"conversation_id": conversation_id}
+            context: contexid
+        }
+
+        var payload = {
+            workspace_id: workspace
+        };
+
+        if (params) {
+            if (params.input) {
+                params.input = params.input.replace("\n", "");
+                payload.input = {
+                    "text": params.input
+                };
+            }
+            if (params.context) {
+                payload.context = params.context;
+            }
+        }
+        callWatson(payload, sender);
+    }
+    res.sendStatus(200);
+};
+
 function callWatson(payload, sender) {
     w_conversation.message(payload, function (err, convResults) {
         console.log(convResults);
+        contexid = convResults.context;
 
         if (err) {
             return responseToRequest.send("Erro.");
@@ -233,7 +278,7 @@ function callWatson(payload, sender) {
 
 function sendMessage(sender, text_) {
     text_ = text_.substring(0, 319);
-    let messageData = {
+    messageData = {
         text: text_
     };
 
