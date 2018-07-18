@@ -225,7 +225,7 @@ const watson = require('watson-developer-cloud'); // watson sdk
 
 const workspace = process.env.WORKSPACE_ID  || 'workspaceId';
 
-let assistant = new watson.AssistantV1({
+let w_conversation = new watson.AssistantV1({
     // If unspecified here, the ASSISTANT_USERNAME and ASSISTANT_PASSWORD env properties will be checked
     // After that, the SDK will fall back to the bluemix-provided VCAP_SERVICES environment property
     url: 'https://gateway.watsonplatform.net/conversation/api',
@@ -238,7 +238,6 @@ let assistant = new watson.AssistantV1({
 function callWatson(payload, sender) {
     w_conversation.message(payload, function (err, convResults) {
         console.log(convResults);
-        contexid = convResults.context;
 
         if (err) {
             return responseToRequest.send("Erro.");
