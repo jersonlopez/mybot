@@ -1,6 +1,7 @@
 'use strict'
 
 const watson = require('watson-developer-cloud'); // watson sdk
+const request = require('request')
 
 const {
   informationModel,
