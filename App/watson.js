@@ -50,7 +50,6 @@ let watsonAssistant = (req, res) => {
 
 let watsonAssistantMessenger = (payload, sender) => {
 
-  let conversation_id = "";
   let workspace = process.env.WORKSPACE_ID || '<workspace-id>';
   if (!workspace || workspace === '<workspace-id>') {
     return res.json({
@@ -61,7 +60,6 @@ let watsonAssistantMessenger = (payload, sender) => {
   }
 
   payload.workspace_id = workspace
-  payload.context = {"conversation_id": conversation_id}
 
   assistant.message(payload, function (err, convResults) {
 
@@ -71,8 +69,8 @@ let watsonAssistantMessenger = (payload, sender) => {
       return responseToRequest.send("Error");
     }
 
-    if (convResults.context != null)
-      conversation_id = convResults.context.conversation_id;
+    if (convResults.context != null) payload.context = convResults.context.conversation_id;
+
     if (convResults != null && convResults.output != null) {
       let i = 0;
       while (i < convResults.output.text.length) {
