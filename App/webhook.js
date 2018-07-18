@@ -180,7 +180,7 @@ module.exports.eventReceiver = (req, res) => {
                     payload.context = params.context;
                 }
             }
-            callWatson(payload, sender);
+            callWatson(payload, sender_psid);
         });
 
         // Returns a '200 OK' response to all requests
