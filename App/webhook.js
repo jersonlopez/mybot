@@ -7,8 +7,6 @@ const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN
 
 let { watsonAssistantMessenger } = require('./watson')
 
-var conversation_id = "";
-
 let handlePostback = (sender_psid, received_postback) => {
     let response;
 
@@ -137,9 +135,7 @@ module.exports.eventReceiver = (req, res) => {
             }
             
             var params = {
-                input: text,
-                context: {"conversation_id": conversation_id}
-                //context:contexid
+                input: text
             }
     
             var payload = {
@@ -150,9 +146,6 @@ module.exports.eventReceiver = (req, res) => {
                 if (params.input) {
                     params.input = params.input.replace("\n","");
                     payload.input = { "text": params.input };
-                }
-                if (params.context) {
-                    payload.context = params.context;
                 }
             }
             watsonAssistantMessenger(payload, sender_psid);

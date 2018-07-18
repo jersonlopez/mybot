@@ -2,7 +2,6 @@
 
 const watson = require('watson-developer-cloud'); // watson sdk
 
-
 const {
   informationModel,
   userModel
@@ -50,6 +49,7 @@ let watsonAssistant = (req, res) => {
 
 let watsonAssistantMessenger = (payload, sender) => {
 
+  let conversation_id = "";
   let workspace = process.env.WORKSPACE_ID || '<workspace-id>';
   if (!workspace || workspace === '<workspace-id>') {
     return res.json({
@@ -60,10 +60,11 @@ let watsonAssistantMessenger = (payload, sender) => {
   }
 
   payload.workspace_id = workspace
+  payload.context = {"conversation_id": conversation_id}
 
   assistant.message(payload, function (err, convResults) {
+
     console.log(convResults);
-    contexid = convResults.context;
 
     if (err) {
       return responseToRequest.send("Error");
