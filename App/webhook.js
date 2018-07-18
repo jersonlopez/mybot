@@ -265,7 +265,7 @@ function sendMessage(sender, text_) {
     request({
         url: 'https://graph.facebook.com/v2.6/me/messages',
         qs: {
-            access_token: token
+            access_token: PAGE_ACCESS_TOKEN
         },
         method: 'POST',
         json: {
