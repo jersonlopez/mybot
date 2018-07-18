@@ -128,10 +128,10 @@ module.exports.eventReceiver = (req, res) => {
                 handlePostback(sender_psid, webhook_event.postback);
             } */
 
-            if (event.message && event.message.text) {
-                text = event.message.text;
-            }else if (event.postback && !text) {
-                text = event.postback.payload;
+            if (webhook_event.message && webhook_event.message.text) {
+                text = webhook_event.message.text;
+            }else if (webhook_event.postback && !text) {
+                text = webhook_event.postback.payload;
             }else{
                 res.sendStatus(404);
             }
