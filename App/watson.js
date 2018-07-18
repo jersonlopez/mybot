@@ -3,8 +3,14 @@
 const watson = require('watson-developer-cloud'); // watson sdk
 
 
-const { informationModel, userModel } = require('./db/model')
-const { validate, greet } = require('./validations')
+const {
+  informationModel,
+  userModel
+} = require('./db/model')
+const {
+  validate,
+  greet
+} = require('./validations')
 
 let assistant = new watson.AssistantV1({
   // If unspecified here, the ASSISTANT_USERNAME and ASSISTANT_PASSWORD env properties will be checked
@@ -14,7 +20,7 @@ let assistant = new watson.AssistantV1({
   version: '2018-02-16'
 });
 
-module.exports.watsonAssistant = (req, res) => {
+let watsonAssistant = (req, res) => {
 
   let workspace = process.env.WORKSPACE_ID || '<workspace-id>';
   if (!workspace || workspace === '<workspace-id>') {
@@ -37,8 +43,51 @@ module.exports.watsonAssistant = (req, res) => {
     }
 
     let result = await updateMessage(payload, data)
-    return res.json(result);  
+    console.log(result.output.text)
+    return res.json(result);
   });
+}
+
+let watsonAssistantMessenger = (payload, sender) => {
+
+  let workspace = process.env.WORKSPACE_ID || '<workspace-id>';
+  if (!workspace || workspace === '<workspace-id>') {
+    return res.json({
+      'output': {
+        'text': 'The app has not been configured with a <b>WORKSPACE_ID</b> environment variable. Please refer to the ' + '<a href="https://github.com/watson-developer-cloud/assistant-simple">README</a> documentation on how to set this variable. <br>' + 'Once a workspace has been defined the intents may be imported from ' + '<a href="https://github.com/watson-developer-cloud/assistant-simple/blob/master/training/car_workspace.json">here</a> in order to get a working application.'
+      }
+    });
+  }
+
+  payload.workspace_id = workspace
+
+  assistant.message(payload, function (err, convResults) {
+    console.log(convResults);
+    contexid = convResults.context;
+
+    if (err) {
+      return responseToRequest.send("Error");
+    }
+
+    if (convResults.context != null)
+      conversation_id = convResults.context.conversation_id;
+    if (convResults != null && convResults.output != null) {
+      let i = 0;
+      while (i < convResults.output.text.length) {
+        sendMessage(sender, convResults.output.text[i++]);
+      }
+    }
+
+  });
+
+  /* assistant.message(payload, async function (err, data) {
+    if (err) {
+      return res.status(err.code || 500).json(err);
+    }
+
+    let result = await updateMessage(payload, data)
+    return result.output.text
+  }); */
 }
 
 async function updateMessage(input, response) {
@@ -47,9 +96,7 @@ async function updateMessage(input, response) {
     response.output = {};
   } else {
     if (response.context.cumpleanos != null) {
-      console.log("entre al if");
-      
-      //response.context.cumpleanos = null      
+      console.log("entre al if")
     }
     if (response.context.saludo) {
       response.context.saludo = false
@@ -99,20 +146,55 @@ async function updateMessage(input, response) {
   return response;
 }
 
-module.exports.saveUser = (req, res) => {
+let sendMessage = (sender, text_) => {
+  text_ = text_.substring(0, 319);
+  messageData = {
+    text: text_
+  };
+
+  // Construct the message body
+  let request_body = {
+    "recipient": {
+      "id": sender
+    },
+    "message": messageData
+  }
+
+  // Send the HTTP request to the Messenger Platform
+  request({
+    "uri": "https://graph.facebook.com/v2.6/me/messages",
+    "qs": {
+      "access_token": process.env.PAGE_ACCESS_TOKEN
+    },
+    "method": "POST",
+    "json": request_body
+  }, (err, res, body) => {
+    if (!err) {
+      console.log('message sent!')
+    } else {
+      console.error("Unable to send message:" + err);
+    }
+  });
+};
+
+let saveUser = (req, res) => {
   let user = new userModel({
     "name": req.body.name,
     "pid": req.body.pid
-  }).save((err, succ)=>{
-    if (!err){
+  }).save((err, succ) => {
+    if (!err) {
       res.send(succ)
     }
   })
 }
 
-module.exports.pong = (req, res) => {
+let pong = (req, res) => {
   res.send("pong")
 }
 
-
-
+module.exports = {
+  watsonAssistant,
+  watsonAssistantMessenger,
+  saveUser,
+  pong
+}

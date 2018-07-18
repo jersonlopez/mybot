@@ -1,7 +1,33 @@
 'use strict'
 
 const request = require('request')
+
+
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN
+
+let { watsonAssistantMessenger } = require('./watson')
+
+var conversation_id = "";
+
+let handlePostback = (sender_psid, received_postback) => {
+    let response;
+
+    // Get the payload for the postback
+    let payload = received_postback.payload;
+
+    // Set the response based on the postback payload
+    if (payload === 'yes') {
+        response = {
+            "text": "Thanks!"
+        }
+    } else if (payload === 'no') {
+        response = {
+            "text": "Oops, try sending another image."
+        }
+    }
+    // Send the message to acknowledge the postback
+    callSendAPI(sender_psid, response);
+}
 
 let callSendAPI = (sender_psid, response) => {
     // Construct the message body
@@ -36,10 +62,37 @@ let handleMessage = (sender_psid, received_message) => {
 
     // Check if the message contains text
     if (received_message.text) {
-
-        // Create the payload for a basic text message
+        // Create the payload for a basic text message, which
+        // will be added to the body of our request to the Send API
         response = {
-            "text": `You sent the message: "${received_message.text}". Now send me an image!`
+            "text": `You sent the message: "${received_message.text}". Now send me an attachment!`
+        }
+    } else if (received_message.attachments) {
+        // Get the URL of the message attachment
+        let attachment_url = received_message.attachments[0].payload.url;
+        response = {
+            "attachment": {
+                "type": "template",
+                "payload": {
+                    "template_type": "generic",
+                    "elements": [{
+                        "title": "Is this the right picture?",
+                        "subtitle": "Tap a button to answer.",
+                        "image_url": attachment_url,
+                        "buttons": [{
+                                "type": "postback",
+                                "title": "Yes!",
+                                "payload": "yes",
+                            },
+                            {
+                                "type": "postback",
+                                "title": "No!",
+                                "payload": "no",
+                            }
+                        ],
+                    }]
+                }
+            }
         }
     }
 
@@ -50,6 +103,7 @@ let handleMessage = (sender_psid, received_message) => {
 
 module.exports.eventReceiver = (req, res) => {
     let body = req.body;
+    let text = null
 
     // Checks this is an event from a page subscription
     if (body.object === 'page') {
@@ -68,11 +122,40 @@ module.exports.eventReceiver = (req, res) => {
 
             // Check if the event is a message or postback and
             // pass the event to the appropriate handler function
-            if (webhook_event.message) {
+            /* if (webhook_event.message) {
                 handleMessage(sender_psid, webhook_event.message);
             } else if (webhook_event.postback) {
                 handlePostback(sender_psid, webhook_event.postback);
+            } */
+
+            if (event.message && event.message.text) {
+                text = event.message.text;
+            }else if (event.postback && !text) {
+                text = event.postback.payload;
+            }else{
+                res.sendStatus(404);
             }
+            
+            var params = {
+                input: text,
+                context: {"conversation_id": conversation_id}
+                //context:contexid
+            }
+    
+            var payload = {
+                workspace_id: null
+            };
+    
+            if (params) {
+                if (params.input) {
+                    params.input = params.input.replace("\n","");
+                    payload.input = { "text": params.input };
+                }
+                if (params.context) {
+                    payload.context = params.context;
+                }
+            }
+            watsonAssistantMessenger(payload, sender);
         });
 
         // Returns a '200 OK' response to all requests
@@ -108,3 +191,6 @@ module.exports.tokenVerify = (req, res) => {
         }
     }
 }
+
+
+/*************************************** Conexion con watson *****************************************/
