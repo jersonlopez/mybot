@@ -116,7 +116,7 @@ module.exports.eventReceiver = (req, res) => {
             // Gets the message. entry.messaging is an array, but 
             // will only ever contain one message, so we get index 0
             let webhook_event = entry.messaging[0];
-            console.log(`\n\nEsto es lo que viene de messenger \n\n${webhook_event}\n\n`);
+            console.log(`\n\nEsto es lo que viene de messenger \n\n${webhook_event[0]}\n\n`);
 
             // Get the sender PSID
             let sender_psid = webhook_event.sender.id;
@@ -237,7 +237,7 @@ let w_conversation = new watson.AssistantV1({
 
 function callWatson(payload, sender) {
     w_conversation.message(payload, function (err, convResults) {
-        console.log(`esto es lo que devuelve watson \n\n${convResults}\n\n`);
+        console.log(`esto es lo que devuelve watson \n\n${convResults[0]}\n\n`);
 
         if (err) {
             return responseToRequest.send("Erro.");
