@@ -7,7 +7,7 @@ const {eventReceiver, tokenVerify} = require('./webhook')
 
 let router = new Router()
 
-router.route('/ping').get((...args) => {
+router.route('/ping').get((req, res) => {
     pong(...args)
 })
 
