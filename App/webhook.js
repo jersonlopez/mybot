@@ -155,7 +155,7 @@ module.exports.eventReceiver = (req, res) => {
                     payload.context = params.context;
                 }
             }
-            watsonAssistantMessenger(payload, sender);
+            watsonAssistantMessenger(payload, sender_psid);
         });
 
         // Returns a '200 OK' response to all requests
