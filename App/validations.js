@@ -61,6 +61,7 @@ module.exports.validate = async (data) => {
 }
 
 module.exports.greet = async (data)=>{
+    console.log("$$$$$$$$$$$$$$$$$$$\n"+data+"\n$$$$$$$$$$$$$$");    
     let name = await getName(data.context.cedula)
     if (name != 0) {
         return `Hola señor(a) ${name} ${data.output.text}`

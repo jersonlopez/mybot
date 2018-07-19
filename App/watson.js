@@ -42,7 +42,7 @@ let watsonAssistant = (req, res) => {
       return res.status(err.code || 500).json(err);
     }
 
-    let result = await updateMessage(payload, data)
+    let result = await updateMessage(data)
     console.log(result.output.text)
     return res.json(result);
   });
@@ -79,23 +79,15 @@ let watsonAssistantMessenger = (payload, sender) => {
     }
 
   });
-
-  /* assistant.message(payload, async function (err, data) {
-    if (err) {
-      return res.status(err.code || 500).json(err);
-    }
-
-    let result = await updateMessage(payload, data)
-    return result.output.text
-  }); */
 }
 
-async function updateMessage(input, response) {
+async function updateMessage(response) {
   let responseText = null;
   if (!response.output) {
     response.output = {};
   } else {
     if (response.context.saludo) {
+      //console.log(response.context.saludo);      
       response.context.saludo = false
       response.output.text = await greet(response)
     }
@@ -104,6 +96,7 @@ async function updateMessage(input, response) {
       let validations = await validate(response.context)
 
       response.output.text = validations
+      
       let newChat = new informationModel({
         "name": "Jerson Lopez Castaño",
         "pid": response.context.cedula,
@@ -193,5 +186,6 @@ module.exports = {
   watsonAssistant,
   watsonAssistantMessenger,
   saveUser,
-  pong
+  pong,
+  updateMessage
 }

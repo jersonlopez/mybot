@@ -199,6 +199,7 @@ module.exports.tokenVerify = (req, res) => {
 
 const watson = require('watson-developer-cloud'); // watson sdk
 
+const { updateMessage } = require('./watson')
 
 const workspace = process.env.WORKSPACE_ID || 'workspaceId';
 
@@ -225,6 +226,7 @@ module.exports.eventReceiver = (req, res) => {
             text = event.message.text;
         } else if (event.postback && !text) {
             text = event.postback.payload;
+            //handlePostback(sender, event.postback)
         } else {
             break;
         }
@@ -256,7 +258,7 @@ module.exports.eventReceiver = (req, res) => {
 };
 
 function callWatson(payload, sender) {
-    w_conversation.message(payload, function (err, convResults) {
+    w_conversation.message(payload, async function (err, convResults) {
         console.log(convResults);
         contexid = convResults.context;
 
@@ -267,8 +269,12 @@ function callWatson(payload, sender) {
         if (convResults.context != null)
             conversation_id = convResults.context.conversation_id;
         if (convResults != null && convResults.output != null) {
-            var i = 0;
+            let i = 0;
             while (i < convResults.output.text.length) {
+                //let result = updateMessage(convResults.output.text[i++])
+                //let result = await updateMessage(convResults)
+                //console.log(result);                
+                //sendMessage(sender, result.output.text[i++]);
                 sendMessage(sender, convResults.output.text[i++]);
             }
         }
@@ -277,11 +283,19 @@ function callWatson(payload, sender) {
 }
 
 function sendMessage(sender, text_) {
-    text_ = text_.substring(0, 319);
-    let messageData = {
-        text: text_
-    };
+    //text_ = text_.substring(0, 319);
+    /* let messageData = null
+    if (text_.search('<button>') != -1) {
+        messageData = buttonList(text_)
+    } else {
+        messageData = {
+            text: text_
+        };
+    } */
 
+    let messageData = {
+            text: text_
+        };
     request({
         url: 'https://graph.facebook.com/v2.6/me/messages',
         qs: {
@@ -302,3 +316,22 @@ function sendMessage(sender, text_) {
         }
     });
 };
+
+let buttonList = (text_) => {
+    const all = text_.split('|')
+    const text = all[0]
+    const buttons = all[1].split(',')
+
+    const quickButtons = buttons.map(title => {
+        title = {
+            content_type : "text",
+            title: title.charAt(0).toUpperCase()+ title.slice(1),
+            payload : title
+        }
+    })
+
+    return {
+        text: text,
+        quick_replies : quickButtons
+    }
+}
